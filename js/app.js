@@ -13,6 +13,14 @@ if (typeof supabase !== 'undefined' && SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
+// ---- AUDIO FEEDBACK ----
+const sounds = {
+  click: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'),
+  success: new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'),
+  levelUp: new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'),
+  timerEnd: new Audio('https://assets.mixkit.co/active_storage/sfx/1003/1003-preview.mp3')
+};
+
 const LEVELS = [
   { name: "مبتدئ ⭐",       min: 0 },
   { name: "متحمّس 🔥",      min: 100 },
@@ -31,6 +39,15 @@ const DEFAULT_GOALS = [
   { id: "noPhone", icon: "📵", name: "بعيد عن الموبايل",     desc: "وقت مستقطع بدون شاشات",            points: 30, category: "تطوير ذات", duration: "1 ساعة" },
   { id: "water",   icon: "💧", name: "شرب الماء",           desc: "حافظ على ترطيب جسمك",               points: 15, category: "صحة", duration: "8 أكواب" },
 ];
+
+function playSound(name) {
+  try {
+    if (sounds[name]) {
+      sounds[name].currentTime = 0;
+      sounds[name].play().catch(() => {}); // التجاهل إذا منعه المتصفح
+    }
+  } catch (e) {}
+}
 
 // ---- STATE ----
 let state = loadState();
@@ -94,6 +111,7 @@ function startApp() {
     document.getElementById("username-input").placeholder = "لازم تكتب اسمك يا بطل!";
     return;
   }
+  playSound('click');
   state.username = name;
   initDailyGoals();
   saveState();
@@ -255,6 +273,7 @@ function toggleGoalTimer(event, index) {
     if (seconds <= 0) {
       clearInterval(activeTimers[index]);
       delete activeTimers[index];
+      playSound('timerEnd');
       completeGoal(index);
     } else {
       const m = Math.floor(seconds / 60);
@@ -314,9 +333,13 @@ function completeGoal(index) {
   const goal = state.dailyGoals[index];
   if (goal.done) return;
 
+  const oldLevel = getCurrentLevel().idx;
   goal.done = true;
   state.totalPoints = (state.totalPoints || 0) + goal.points;
   state.totalDone = (state.totalDone || 0) + 1;
+
+  const newLevel = getCurrentLevel().idx;
+  if (newLevel > oldLevel) playSound('levelUp'); else playSound('success');
 
   saveState();
   renderDailyGoals();
@@ -590,6 +613,7 @@ function updateProfileUI() {
 
 // ---- NAVIGATION ----
 function showPage(name) {
+  playSound('click');
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
 
@@ -704,6 +728,11 @@ function closeAdminPanel() {
 
 // ---- BOOT ----
 window.addEventListener("DOMContentLoaded", () => {
+  // Register PWA Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
   if (state.username) {
     initDailyGoals();
     saveState();
