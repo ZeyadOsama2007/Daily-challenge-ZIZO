@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تحدّي | ابدأ يومك بانتصار</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ===== SPLASH / USERNAME SCREEN ===== -->
+<div id="splash-screen" class="splash-screen">
+  <div class="splash-content">
+    <div class="splash-logo">⚡</div>
+    <h1 class="splash-title">تحدّي</h1>
+    <p class="splash-sub">ابدأ رحلتك اليومية نحو نسخة أفضل منك</p>
+    <div class="input-group">
+      <input type="text" id="username-input" placeholder="اكتب اسمك يا بطل..." maxlength="20" />
+      <button id="start-btn" onclick="startApp()">ابدأ ⚡</button>
+    </div>
+  </div>
+  <div class="splash-bg"></div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app" class="app hidden">
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="showPage('home')" data-page="home">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">الرئيسية</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('challenges')" data-page="challenges">
+      <span class="nav-icon">🔍</span>
+      <span class="nav-label">التحديات</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('friends')" data-page="friends">
+      <span class="nav-icon">👥</span>
+      <span class="nav-label">الأصدقاء</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('profile')" data-page="profile">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">ملفي</span>
+    </button>
+  </nav>
+
+  <!-- ===== HOME PAGE ===== -->
+  <div id="page-home" class="page active">
+    <div class="home-header">
+      <div class="greeting-line">
+        <span class="greeting-wave">👋</span>
+        <span id="greeting-text">صباح النور</span>، <span id="hero-name"></span>!
+      </div>
+      <div class="header-points">
+        <span class="points-badge">⚡ <span id="header-points">0</span> نقطة</span>
+      </div>
+    </div>
+
+    <!-- HERO CARD -->
+    <div class="hero-card">
+      <div class="hero-glow"></div>
+      <div class="hero-content">
+        <div class="hero-icon">🏆</div>
+        <h2 class="hero-title">جاهز لتحدٍّ جديد يا بطل؟</h2>
+        <p class="hero-sub">كل يوم فرصة جديدة تتفوق فيها على نفسك</p>
+        <div class="streak-row">
+          <div class="streak-item">
+            <span class="streak-num" id="streak-days">0</span>
+            <span class="streak-lbl">يوم متتالي 🔥</span>
+          </div>
+          <div class="streak-divider"></div>
+          <div class="streak-item">
+            <span class="streak-num" id="total-points-hero">0</span>
+            <span class="streak-lbl">إجمالي نقاطك ⚡</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAILY GOALS BAR -->
+    <div class="section-title">🎯 أهدافك اليومية</div>
+    <div class="daily-goals" id="daily-goals-list">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- LEVEL PROGRESS -->
+    <div class="level-card">
+      <div class="level-header">
+        <span class="level-badge" id="level-badge">مبتدئ ⭐</span>
+        <span class="level-num">المستوى <span id="current-level">1</span></span>
+      </div>
+      <div class="xp-bar-wrap">
+        <div class="xp-bar" id="xp-bar"></div>
+      </div>
+      <div class="xp-label"><span id="xp-current">0</span> / <span id="xp-next">100</span> نقطة للمستوى التالي</div>
+    </div>
+
+    <!-- TODAY SUMMARY -->
+    <div class="section-title">📊 ملخص اليوم</div>
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-icon">✅</div>
+        <div class="summary-num" id="done-count">0</div>
+        <div class="summary-lbl">منجز</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon">⏳</div>
+        <div class="summary-num" id="pending-count">0</div>
+        <div class="summary-lbl">متبقي</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon">⚡</div>
+        <div class="summary-num" id="today-points">0</div>
+        <div class="summary-lbl">نقاط اليوم</div>
+      </div>
+    </div>
+
+    <!-- END OF DAY COUNTDOWN -->
+    <div class="countdown-card">
+      <div class="countdown-label">⏰ الوقت المتبقي في اليوم</div>
+      <div class="countdown-time" id="countdown-timer">--:--:--</div>
+    </div>
+  </div>
+
+  <!-- ===== CHALLENGES PAGE ===== -->
+  <div id="page-challenges" class="page">
+    <div class="page-header">
+      <h2 class="page-title">🔍 اكتشف تحدياتك</h2>
+      <p class="page-sub">ابحث عن أي هدف وسنبني لك تحدياً مخصصاً</p>
+    </div>
+
+    <div class="search-container">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="challenge-search" placeholder="ابحث عن تحدٍّ... مثلاً: شطرنج، قراءة، رياضة" />
+        <button id="search-btn" onclick="searchChallenge()">ابحث</button>
+      </div>
+      <div class="search-tags">
+        <button class="tag-btn" onclick="quickSearch('مذاكرة')">📚 مذاكرة</button>
+        <button class="tag-btn" onclick="quickSearch('رياضة')">💪 رياضة</button>
+        <button class="tag-btn" onclick="quickSearch('قراءة')">📖 قراءة</button>
+        <button class="tag-btn" onclick="quickSearch('تأمل')">🧘 تأمل</button>
+        <button class="tag-btn" onclick="quickSearch('شطرنج')">♟️ شطرنج</button>
+        <button class="tag-btn" onclick="quickSearch('رسم')">🎨 رسم</button>
+      </div>
+    </div>
+
+    <div id="search-results" class="search-results">
+      <div class="search-placeholder">
+        <div class="placeholder-icon">✨</div>
+        <p>اكتب في خانة البحث وسيولد الذكاء الاصطناعي<br/>تحديات مخصصة لهدفك!</p>
+      </div>
+    </div>
+
+    <!-- DEFAULT CATEGORIES -->
+    <div class="section-title">📂 فئات التحديات</div>
+    <div class="categories-grid">
+      <div class="cat-card" onclick="quickSearch('مذاكرة وتعليم')">
+        <div class="cat-icon">📚</div>
+        <div class="cat-name">مذاكرة</div>
+        <div class="cat-pts">20-60 نقطة</div>
+      </div>
+      <div class="cat-card" onclick="quickSearch('رياضة ولياقة')">
+        <div class="cat-icon">💪</div>
+        <div class="cat-name">رياضة</div>
+        <div class="cat-pts">30-80 نقطة</div>
+      </div>
+      <div class="cat-card" onclick="quickSearch('تطوير ذات ومهارات')">
+        <div class="cat-icon">📈</div>
+        <div class="cat-name">تطوير ذات</div>
+        <div class="cat-pts">25-70 نقطة</div>
+      </div>
+      <div class="cat-card" onclick="quickSearch('إبداع وفنون')">
+        <div class="cat-icon">🎨</div>
+        <div class="cat-name">إبداع</div>
+        <div class="cat-pts">20-50 نقطة</div>
+      </div>
+      <div class="cat-card" onclick="quickSearch('صحة ونوم')">
+        <div class="cat-icon">😴</div>
+        <div class="cat-name">صحة</div>
+        <div class="cat-pts">15-40 نقطة</div>
+      </div>
+      <div class="cat-card" onclick="quickSearch('تواصل اجتماعي')">
+        <div class="cat-icon">🤝</div>
+        <div class="cat-name">تواصل</div>
+        <div class="cat-pts">10-30 نقطة</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FRIENDS PAGE ===== -->
+  <div id="page-friends" class="page">
+    <div class="page-header">
+      <h2 class="page-title">👥 لوحة المتصدرين</h2>
+      <p class="page-sub">شوف مين الأبطال اللي بيتفوقوا عليك!</p>
+    </div>
+
+    <div class="leaderboard-card my-rank-card">
+      <div class="rank-position">🏆</div>
+      <div class="rank-info">
+        <div class="rank-name" id="my-rank-name">أنت</div>
+        <div class="rank-streak" id="my-rank-streak">0 يوم 🔥</div>
+      </div>
+      <div class="rank-points" id="my-rank-points">0 ⚡</div>
+    </div>
+
+    <div class="section-title">🏅 المتصدرون</div>
+    <div id="leaderboard-list" class="leaderboard-list">
+      <!-- Populated by JS -->
+    </div>
+
+    <div class="share-section">
+      <div class="share-title">📤 شارك تحديك مع أصدقائك</div>
+      <div class="share-btns">
+        <button class="share-btn whatsapp" onclick="shareApp('whatsapp')">📱 واتساب</button>
+        <button class="share-btn copy" onclick="shareApp('copy')">🔗 نسخ الرابط</button>
+      </div>
+      <div id="copy-toast" class="copy-toast hidden">✅ تم نسخ الرابط!</div>
+    </div>
+  </div>
+
+  <!-- ===== PROFILE PAGE ===== -->
+  <div id="page-profile" class="page">
+    <div class="profile-header">
+      <div class="profile-avatar" id="profile-avatar">🦸</div>
+      <div class="profile-name" id="profile-username">البطل</div>
+      <div class="profile-level-badge" id="profile-level-badge">المستوى 1 - مبتدئ ⭐</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num" id="stat-total-points">0</div>
+        <div class="stat-lbl">إجمالي النقاط</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="stat-streak">0</div>
+        <div class="stat-lbl">أيام متتالية</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="stat-done">0</div>
+        <div class="stat-lbl">تحديات منجزة</div>
+      </div>
+    </div>
+
+    <div class="section-title">🔄 إعادة تعيين اليوم</div>
+    <div class="reset-card">
+      <p>هل تريد تصفير تحديات اليوم؟ (النقاط المكتسبة ستحتفظ بها)</p>
+      <button class="reset-btn" onclick="resetDailyGoals()">🔄 إعادة تعيين اليوم</button>
+    </div>
+
+    <div class="section-title">⚙️ الإعدادات</div>
+    <div class="settings-card">
+      <div class="setting-item">
+        <span>تغيير الاسم</span>
+        <button onclick="changeName()" class="setting-action-btn">✏️ تغيير</button>
+      </div>
+      <div class="setting-item">
+        <span>مسح البيانات كاملة</span>
+        <button onclick="clearAllData()" class="setting-action-btn danger">🗑️ مسح</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end #app -->
+
+<!-- LOADING OVERLAY FOR AI -->
+<div id="ai-loading" class="ai-loading hidden">
+  <div class="ai-spinner">
+    <div class="spinner-ring"></div>
+    <div class="spinner-text">الذكاء الاصطناعي بيفكر... ⚡</div>
+  </div>
+</div>
+
+<!-- COMPLETION MODAL -->
+<div id="complete-modal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-emoji" id="modal-emoji">🎉</div>
+    <div class="modal-title" id="modal-title">أحسنت!</div>
+    <div class="modal-sub" id="modal-sub">كسبت نقاط!</div>
+    <div class="modal-points" id="modal-points">+20 ⚡</div>
+    <button class="modal-close-btn" onclick="closeModal()">رائع! واصل 🚀</button>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
