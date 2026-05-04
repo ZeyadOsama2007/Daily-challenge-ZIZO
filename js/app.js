@@ -589,6 +589,57 @@ function clearAllData() {
   }
 }
 
+// ---- ADMIN FUNCTIONS ----
+function checkAdminPassword() {
+  const pass = prompt("أدخل كلمة مرور الإدارة:");
+  if (pass === "admin123") { // يمكنك تغيير كلمة السر هنا
+    alert("أهلاً بك يا مدير! تم تفعيل لوحة التحكم في أسفل الصفحة.");
+    document.getElementById("admin-section").classList.remove("hidden");
+    renderAdminUsers();
+    // Scroll to admin section
+    document.getElementById("admin-section").scrollIntoView({ behavior: 'smooth' });
+  } else {
+    alert("كلمة مرور خاطئة!");
+  }
+}
+
+function renderAdminUsers() {
+  const users = getLeaderboard();
+  const container = document.getElementById("admin-users-list");
+  container.innerHTML = "<h4>إدارة المستخدمين المحليين:</h4>";
+
+  users.forEach(u => {
+    const div = document.createElement("div");
+    div.className = "setting-item";
+    div.innerHTML = `
+      <div>
+        <strong>${u.name}</strong> 
+        <span style="font-size:0.7rem; color:var(--text-muted)">(${u.points}⚡)</span>
+      </div>
+      <button onclick="adminDeleteUser('${u.name}')" class="setting-action-btn danger" style="padding: 2px 8px;">حذف</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function adminDeleteUser(username) {
+  if (confirm(`هل أنت متأكد من حذف المستخدم "${username}" نهائياً؟`)) {
+    localStorage.removeItem("tahady_lb_" + username);
+    if (state.username === username) {
+      localStorage.removeItem("tahady_state");
+      location.reload();
+    } else {
+      renderAdminUsers();
+      updateLeaderboardUI();
+      alert("تم حذف المستخدم بنجاح.");
+    }
+  }
+}
+
+function closeAdminPanel() {
+  document.getElementById("admin-section").classList.add("hidden");
+}
+
 // ---- BOOT ----
 window.addEventListener("DOMContentLoaded", () => {
   if (state.username) {

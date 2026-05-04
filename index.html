@@ -297,6 +297,21 @@
         <span>مسح البيانات كاملة</span>
         <button onclick="clearAllData()" class="setting-action-btn danger">🗑️ مسح</button>
       </div>
+      <div class="setting-item">
+        <span>دخول الإدارة (سري)</span>
+        <button onclick="checkAdminPassword()" class="setting-action-btn">🔐 دخول</button>
+      </div>
+    </div>
+
+    <!-- ADMIN SECTION (Hidden by default) -->
+    <div id="admin-section" class="hidden">
+      <div class="section-title" style="color: var(--accent-red);">🛠️ لوحة التحكم - الإدارة</div>
+      <div class="settings-card" style="border-color: var(--accent-red);">
+        <div id="admin-users-list">
+          <!-- Users will be listed here -->
+        </div>
+        <button onclick="closeAdminPanel()" class="reset-btn" style="margin-top: 1rem; border-color: var(--text-muted); color: var(--text-muted);">إغلاق اللوحة</button>
+      </div>
     </div>
   </div>
 
