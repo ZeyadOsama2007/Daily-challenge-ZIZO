@@ -7,7 +7,11 @@
 // استبدل هذه القيم ببيانات مشروعك من Supabase لاحقاً
 const SUPABASE_URL = 'YOUR_SUPABASE_URL';
 const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
-const supabase = (typeof supabase !== 'undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+let supabaseClient = null;
+if (typeof supabase !== 'undefined' && SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+  supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
 
 const LEVELS = [
   { name: "مبتدئ ⭐",       min: 0 },
@@ -66,15 +70,15 @@ async function syncLeaderboard() {
     last_active: new Date().toISOString()
   };
 
-  if (supabase) {
-    await supabase.from('leaderboard').upsert(data, { onConflict: 'name' });
+  if (supabaseClient) {
+    await supabaseClient.from('leaderboard').upsert(data, { onConflict: 'name' });
   }
 }
 
 async function getLeaderboard() {
-  if (!supabase) return [];
+  if (!supabaseClient) return [];
   
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('leaderboard')
     .select('*')
     .order('points', { ascending: false });
@@ -629,8 +633,8 @@ async function renderAdminUsers() {
 async function adminDeleteUser(username) {
   if (confirm(`هل أنت متأكد من حذف المستخدم "${username}" نهائياً؟`)) {
     // حذف من Supabase إذا كان مفعلاً
-    if (supabase) {
-      await supabase.from('leaderboard').delete().eq('name', username);
+    if (supabaseClient) {
+      await supabaseClient.from('leaderboard').delete().eq('name', username);
     }
     
     if (state.username === username) {
