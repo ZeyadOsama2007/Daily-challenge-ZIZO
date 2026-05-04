@@ -4,6 +4,11 @@
 // =============================================
 
 // ---- CONSTANTS ----
+// استبدل هذه القيم ببيانات مشروعك من Supabase لاحقاً
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const supabase = (typeof supabase !== 'undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
 const LEVELS = [
   { name: "مبتدئ ⭐",       min: 0 },
   { name: "متحمّس 🔥",      min: 100 },
@@ -12,6 +17,7 @@ const LEVELS = [
   { name: "بطل 🏆",        min: 1000 },
   { name: "أسطورة 👑",     min: 2000 },
   { name: "خارق 🌟",       min: 5000 },
+  { name: "عنتيل🌟",       min: 10000 },
 ];
 
 const DEFAULT_GOALS = [
@@ -48,34 +54,32 @@ function saveState() {
   syncLeaderboard();
 }
 
-// ---- LEADERBOARD (SharedStorage simulation via localStorage key visible to friends) ----
-function syncLeaderboard() {
+// ---- LEADERBOARD (Sync with Cloud Database) ----
+async function syncLeaderboard() {
   if (!state.username) return;
-  const key = "tahady_lb_" + state.username;
+  
   const data = {
     name: state.username,
     points: state.totalPoints,
     streak: state.streak,
     level: state.level,
-    ts: Date.now(),
+    last_active: new Date().toISOString()
   };
-  localStorage.setItem(key, JSON.stringify(data));
+
+  if (supabase) {
+    await supabase.from('leaderboard').upsert(data, { onConflict: 'name' });
+  }
 }
 
-function getLeaderboard() {
-  const entries = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (k && k.startsWith("tahady_lb_")) {
-      try {
-        const v = JSON.parse(localStorage.getItem(k));
-        entries.push(v);
-      } catch(e) {}
-    }
-  }
-  // Sort by points desc
-  entries.sort((a, b) => b.points - a.points);
-  return entries;
+async function getLeaderboard() {
+  if (!supabase) return [];
+  
+  const { data, error } = await supabase
+    .from('leaderboard')
+    .select('*')
+    .order('points', { ascending: false });
+    
+  return data || [];
 }
 
 // ---- INIT ----
@@ -488,8 +492,8 @@ function addChallengeToGoals(btn, challenge) {
 }
 
 // ---- LEADERBOARD UI ----
-function updateLeaderboardUI() {
-  const entries = getLeaderboard();
+async function updateLeaderboardUI() {
+  const entries = await getLeaderboard();
   const list = document.getElementById("leaderboard-list");
   list.innerHTML = "";
 
@@ -590,12 +594,12 @@ function clearAllData() {
 }
 
 // ---- ADMIN FUNCTIONS ----
-function checkAdminPassword() {
+async function checkAdminPassword() {
   const pass = prompt("أدخل كلمة مرور الإدارة:");
   if (pass === "admin123") { // يمكنك تغيير كلمة السر هنا
     alert("أهلاً بك يا مدير! تم تفعيل لوحة التحكم في أسفل الصفحة.");
     document.getElementById("admin-section").classList.remove("hidden");
-    renderAdminUsers();
+    await renderAdminUsers();
     // Scroll to admin section
     document.getElementById("admin-section").scrollIntoView({ behavior: 'smooth' });
   } else {
@@ -603,8 +607,8 @@ function checkAdminPassword() {
   }
 }
 
-function renderAdminUsers() {
-  const users = getLeaderboard();
+async function renderAdminUsers() {
+  const users = await getLeaderboard();
   const container = document.getElementById("admin-users-list");
   container.innerHTML = "<h4>إدارة المستخدمين المحليين:</h4>";
 
@@ -622,15 +626,19 @@ function renderAdminUsers() {
   });
 }
 
-function adminDeleteUser(username) {
+async function adminDeleteUser(username) {
   if (confirm(`هل أنت متأكد من حذف المستخدم "${username}" نهائياً؟`)) {
-    localStorage.removeItem("tahady_lb_" + username);
+    // حذف من Supabase إذا كان مفعلاً
+    if (supabase) {
+      await supabase.from('leaderboard').delete().eq('name', username);
+    }
+    
     if (state.username === username) {
       localStorage.removeItem("tahady_state");
       location.reload();
     } else {
-      renderAdminUsers();
-      updateLeaderboardUI();
+      await renderAdminUsers();
+      await updateLeaderboardUI();
       alert("تم حذف المستخدم بنجاح.");
     }
   }
