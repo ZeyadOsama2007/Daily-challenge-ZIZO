@@ -24,6 +24,7 @@ const DEFAULT_GOALS = [
 
 // ---- STATE ----
 let state = loadState();
+let activeTimers = {}; // لتتبع العدادات الجارية
 
 function loadState() {
   try {
@@ -204,14 +205,77 @@ function renderDailyGoals() {
       <div class="goal-info">
         <div class="goal-name">${goal.icon} ${goal.name}</div>
         <div class="goal-desc">${goal.desc}</div>
-        <div class="goal-duration-tag" onclick="changeGoalDuration(event, ${i})">
-          ⏱ <span>${goal.duration || 'إضافة وقت'}</span> ✏️
+        <div class="goal-duration-tag">
+          <span onclick="toggleGoalTimer(event, ${i})" style="cursor:pointer">
+            ${activeTimers[i] ? '⏹' : '⏱'} 
+            <span id="timer-display-${i}">${goal.duration || 'إضافة وقت'}</span>
+          </span>
+          ${!goal.done ? `<button class="add-time-mini-btn" onclick="addTime(event, ${i}, 5)">+5د</button>` : ''}
+          <span onclick="changeGoalDuration(event, ${i})" style="cursor:pointer; margin-right:5px">✏️</span>
         </div>
       </div>
       <div class="goal-points">${goal.done ? "✓" : "+" + goal.points} ⚡</div>
     `;
     container.appendChild(div);
   });
+}
+
+function toggleGoalTimer(event, index) {
+  event.stopPropagation();
+  const goal = state.dailyGoals[index];
+  if (goal.done) return;
+
+  if (activeTimers[index]) {
+    clearInterval(activeTimers[index]);
+    delete activeTimers[index];
+    renderDailyGoals();
+    return;
+  }
+
+  const match = goal.duration.match(/\d+/);
+  if (!match) {
+    changeGoalDuration(event, index);
+    return;
+  }
+
+  let seconds = parseInt(match[0]) * 60;
+  if (goal.duration.includes("ساعة")) seconds = parseInt(match[0]) * 3600;
+
+  activeTimers[index] = setInterval(() => {
+    seconds--;
+    if (seconds <= 0) {
+      clearInterval(activeTimers[index]);
+      delete activeTimers[index];
+      completeGoal(index);
+    } else {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      const display = document.getElementById(`timer-display-${index}`);
+      if (display) display.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+    }
+  }, 1000);
+
+  renderDailyGoals();
+}
+
+function addTime(event, index, mins) {
+  event.stopPropagation();
+  const goal = state.dailyGoals[index];
+  if (goal.done) return;
+
+  const match = goal.duration.match(/\d+/);
+  let currentMins = match ? parseInt(match[0]) : 0;
+  if (goal.duration.includes("ساعة") && match) currentMins *= 60;
+
+  const newMins = currentMins + mins;
+  state.dailyGoals[index].duration = `${newMins} دقيقة`;
+  
+  // زيادة النقاط فعلياً لأن التحدي أصبح أطول
+  state.dailyGoals[index].points += 5;
+
+  saveState();
+  renderDailyGoals();
+  updateHomeUI();
 }
 
 function changeGoalDuration(event, index) {
