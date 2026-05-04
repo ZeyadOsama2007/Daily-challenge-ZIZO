@@ -206,11 +206,12 @@ function renderDailyGoals() {
         <div class="goal-name">${goal.icon} ${goal.name}</div>
         <div class="goal-desc">${goal.desc}</div>
         <div class="goal-duration-tag">
+          ${!goal.done ? `<div class="time-control-btn" onclick="adjustTime(event, ${i}, -5)">-</div>` : ''}
           <span onclick="toggleGoalTimer(event, ${i})" style="cursor:pointer">
             ${activeTimers[i] ? '⏹' : '⏱'} 
             <span id="timer-display-${i}">${goal.duration || 'إضافة وقت'}</span>
           </span>
-          ${!goal.done ? `<button class="add-time-mini-btn" onclick="addTime(event, ${i}, 5)">+5د</button>` : ''}
+          ${!goal.done ? `<div class="time-control-btn" onclick="adjustTime(event, ${i}, 5)">+</div>` : ''}
           <span onclick="changeGoalDuration(event, ${i})" style="cursor:pointer; margin-right:5px">✏️</span>
         </div>
       </div>
@@ -258,20 +259,30 @@ function toggleGoalTimer(event, index) {
   renderDailyGoals();
 }
 
-function addTime(event, index, mins) {
+function adjustTime(event, index, delta) {
   event.stopPropagation();
   const goal = state.dailyGoals[index];
   if (goal.done) return;
+
+  // إيقاف العداد إذا كان يعمل لتجنب التداخل
+  if (activeTimers[index]) {
+    clearInterval(activeTimers[index]);
+    delete activeTimers[index];
+  }
 
   const match = goal.duration.match(/\d+/);
   let currentMins = match ? parseInt(match[0]) : 0;
   if (goal.duration.includes("ساعة") && match) currentMins *= 60;
 
-  const newMins = currentMins + mins;
+  let newMins = currentMins + delta;
+  if (newMins < 5) newMins = 5; // الحد الأدنى للتحدي 5 دقائق
+
   state.dailyGoals[index].duration = `${newMins} دقيقة`;
   
-  // زيادة النقاط فعلياً لأن التحدي أصبح أطول
-  state.dailyGoals[index].points += 5;
+  // حسب طلبك: كل 10 دقائق = 3 نقاط. إذن كل 5 دقائق = 1.5 نقطة.
+  // سنستخدم Math.round للحصول على نقاط صحيحة معقولة (2 ثم 1 بالتبادل)
+  const pointChange = (delta > 0) ? 2 : -2;
+  state.dailyGoals[index].points = Math.max(5, state.dailyGoals[index].points + pointChange);
 
   saveState();
   renderDailyGoals();
