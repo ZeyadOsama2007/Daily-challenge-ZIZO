@@ -324,6 +324,56 @@ function completeGoal(index) {
   showCompletionModal(goal);
 }
 
+// ---- AI COACH ----
+async function getAICoachAdvice() {
+  const bubble = document.getElementById("coach-bubble");
+  const btn = document.querySelector(".coach-ask-btn");
+  
+  bubble.classList.remove("hidden");
+  bubble.textContent = "جاري تحليل أدائك... 🤔";
+  btn.disabled = true;
+
+  const doneCount = state.dailyGoals.filter(g => g.done).length;
+  const pendingCount = state.dailyGoals.filter(g => !g.done).length;
+
+  const promptText = `المستخدم اسمه ${state.username}. 
+  نقاطه الحالية: ${state.totalPoints}. 
+  الـ Streak: ${state.streak}. 
+  أنجز اليوم ${doneCount} تحديات ومتبقي له ${pendingCount}.
+  أعطه نصيحة محفزة جداً وقصيرة جداً (جملة واحدة) واقترح عليه فئة تحدي (مثل الرياضة أو القراءة) يركز عليها الآن لزيادة مستواه.`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "x-api-key": "YOUR_API_KEY_HERE" // سيحتاج المستخدم لوضع مفتاحه أو استخدامه عبر Netlify
+      },
+      body: JSON.stringify({
+        model: "claude-3-haiku-20240307",
+        max_tokens: 200,
+        messages: [{ role: "user", content: promptText }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.content && data.content[0]) {
+      bubble.textContent = "🤖 " + data.content[0].text;
+    } else {
+      throw new Error("Invalid response");
+    }
+  } catch (err) {
+    console.error("Coach Error:", err);
+    bubble.textContent = "🤖 يا بطل، استمر في التقدم! النقاط اللي جمعتها اليوم ممتازة، كمل التحدي الجاي عشان تقرب من المستوى الأسطوري! 🔥";
+  } finally {
+    btn.disabled = false;
+    // إخفاء الفقاعة بعد 15 ثانية تلقائياً
+    setTimeout(() => {
+      bubble.classList.add("hidden");
+    }, 15000);
+  }
+}
+
 function showCompletionModal(goal) {
   const emojis = { "مذاكرة": "🧠", "رياضة": "💪", "قراءة": "📖", "صحة": "💧", "تطوير ذات": "📈" };
   const emoji = emojis[goal.category] || "🎉";

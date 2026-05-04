@@ -50,7 +50,9 @@
 <!-- ===== SPLASH / USERNAME SCREEN ===== -->
 <div id="splash-screen" class="splash-screen">
   <div class="splash-content">
-    <div class="splash-logo">⚡</div>
+    <!-- مثال لإضافة صورة من جهازك بدلاً من الإيموجي -->
+    <img src="images/logo.png" alt="Logo" style="width: 100px; margin-bottom: 1rem;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+    <div class="splash-logo" style="display:none;">⚡</div>
     <h1 class="splash-title">تحدّي</h1>
     <p class="splash-sub">ابدأ رحلتك اليومية نحو نسخة أفضل منك</p>
     <div class="input-group">
@@ -115,6 +117,19 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- AI COACH SECTION -->
+    <div class="ai-coach-card" id="ai-coach-section">
+      <div class="coach-header">
+        <div class="coach-icon-wrap">🤖</div>
+        <div class="coach-info">
+          <div class="coach-title">المدرب الذكي</div>
+          <div class="coach-status">متصل وجاهز لتحفيزك</div>
+        </div>
+        <button class="coach-ask-btn" onclick="getAICoachAdvice()">استشارة ⚡</button>
+      </div>
+      <div id="coach-bubble" class="coach-bubble hidden"></div>
     </div>
 
     <!-- DAILY GOALS BAR -->

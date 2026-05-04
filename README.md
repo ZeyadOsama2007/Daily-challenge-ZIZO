@@ -13,6 +13,7 @@ daily-challenge/
 │   └── style.css      ← كل التصميم (RTL + Responsive)
 ├── js/
 │   └── app.js         ← كل المنطق + AI Search
+├── images/            ← مجلد الصور (أضف صورك هنا)
 └── README.md
 ```
 
