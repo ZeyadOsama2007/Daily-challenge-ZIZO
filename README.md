@@ -77,9 +77,11 @@ git push -u origin main
 
 ## 🔑 إعداد Anthropic API
 
-لتشغيل البحث بالذكاء الاصطناعي محلياً:
+> [!CAUTION]
+> **تحذير أمني:** لا تقم برفع مفتاح الـ API الخاص بك مباشرة على GitHub. 
+> استخدم ملف `.env` أو Netlify Environment Variables.
 
-لو محتاج تختبر محلياً بدون API، عدّل في `js/app.js` دالة `runAISearch` وحط نتائج وهمية.
+لتشغيل البحث محلياً بدون API، يمكنك تعديل دالة `runAISearch` في `js/app.js` لإرجاع نتائج ثابتة (Mock Data).
 
 ---
 

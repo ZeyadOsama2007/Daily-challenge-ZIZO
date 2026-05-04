@@ -15,11 +15,11 @@ const LEVELS = [
 ];
 
 const DEFAULT_GOALS = [
-  { id: "study",   icon: "📚", name: "مذاكرة 30 دقيقة",     desc: "ادرس مادة مهمة لمدة نصف ساعة",      points: 20, category: "مذاكرة" },
-  { id: "sport",   icon: "🏃", name: "رياضة 20 دقيقة",      desc: "جري، عرقلة، أو أي نشاط بدني",       points: 40, category: "رياضة" },
-  { id: "read",    icon: "📖", name: "اقرأ 10 صفحات",        desc: "من أي كتاب مفيد",                   points: 20, category: "قراءة" },
-  { id: "noPhone", icon: "📵", name: "بعيد عن الموبايل ساعة", desc: "ساعة بدون سوشيال ميديا",            points: 30, category: "تطوير ذات" },
-  { id: "water",   icon: "💧", name: "اشرب 8 أكواب ماء",     desc: "حافظ على ترطيب جسمك",               points: 15, category: "صحة" },
+  { id: "study",   icon: "📚", name: "مذاكرة",              desc: "ادرس مادة مهمة",                   points: 20, category: "مذاكرة", duration: "30 دقيقة" },
+  { id: "sport",   icon: "🏃", name: "رياضة",              desc: "نشاط بدني لرفع اللياقة",            points: 40, category: "رياضة", duration: "20 دقيقة" },
+  { id: "read",    icon: "📖", name: "قراءة",               desc: "من أي كتاب مفيد",                   points: 20, category: "قراءة", duration: "10 صفحات" },
+  { id: "noPhone", icon: "📵", name: "بعيد عن الموبايل",     desc: "وقت مستقطع بدون شاشات",            points: 30, category: "تطوير ذات", duration: "1 ساعة" },
+  { id: "water",   icon: "💧", name: "شرب الماء",           desc: "حافظ على ترطيب جسمك",               points: 15, category: "صحة", duration: "8 أكواب" },
 ];
 
 // ---- STATE ----
@@ -204,11 +204,27 @@ function renderDailyGoals() {
       <div class="goal-info">
         <div class="goal-name">${goal.icon} ${goal.name}</div>
         <div class="goal-desc">${goal.desc}</div>
+        <div class="goal-duration-tag" onclick="changeGoalDuration(event, ${i})">
+          ⏱ <span>${goal.duration || 'إضافة وقت'}</span> ✏️
+        </div>
       </div>
       <div class="goal-points">${goal.done ? "✓" : "+" + goal.points} ⚡</div>
     `;
     container.appendChild(div);
   });
+}
+
+function changeGoalDuration(event, index) {
+  event.stopPropagation(); // منع إتمام التحدي عند النقر على الوقت
+  const goal = state.dailyGoals[index];
+  if (goal.done) return;
+
+  const newDuration = prompt("حدد الوقت أو الكمية لهذا التحدي (مثلاً: 45 دقيقة):", goal.duration || "");
+  if (newDuration !== null && newDuration.trim() !== "") {
+    state.dailyGoals[index].duration = newDuration.trim();
+    saveState();
+    renderDailyGoals();
+  }
 }
 
 function completeGoal(index) {
@@ -381,6 +397,7 @@ function addChallengeToGoals(btn, challenge) {
     desc: challenge.desc,
     points: challenge.points,
     category: challenge.category,
+    duration: challenge.duration,
     done: false,
   };
 

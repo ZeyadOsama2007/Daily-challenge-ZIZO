@@ -7,6 +7,23 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    .goal-duration-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.85rem;
+      margin-top: 8px;
+      padding: 4px 10px;
+      background: rgba(0, 0, 0, 0.04);
+      border-radius: 20px;
+      cursor: pointer;
+      color: #666;
+      border: 1px dashed #ccc;
+    }
+    .goal-duration-tag:hover { background: rgba(0, 0, 0, 0.08); }
+    .goal-item.completed .goal-duration-tag { opacity: 0.6; cursor: default; }
+  </style>
 </head>
 <body>
 
