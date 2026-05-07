@@ -222,7 +222,7 @@ html, body {
   font-size: 0.9rem; flex-shrink: 0; transition: all 0.3s;
 }
 .goal-item.completed .goal-check { background: var(--accent-green); border-color: var(--accent-green); }
-.goal-info { flex: 1; }
+.goal-info { flex: 1; min-width: 0; }
 .goal-name { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
 .goal-desc { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; }
 .goal-points {
@@ -525,10 +525,11 @@ html, body {
   font-size: 1.1rem;
   cursor: pointer;
   padding: 5px;
-  margin-right: 10px;
+  margin: 0 5px;
   transition: transform 0.2s;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 .delete-goal-btn:hover {
   transform: scale(1.2);

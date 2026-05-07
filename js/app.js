@@ -252,8 +252,8 @@ function renderDailyGoals() {
           <span onclick="changeGoalDuration(event, ${i})" style="cursor:pointer; margin-right:5px">✏️</span>
         </div>
       </div>
-      <div class="goal-points">${goal.done ? "✓" : "+" + goal.points} ⚡</div>
       <button class="delete-goal-btn" onclick="deleteChallenge(event, ${i})">🗑️</button>
+      <div class="goal-points">${goal.done ? "✓" : "+" + goal.points} ⚡</div>
     `;
     container.appendChild(div);
   });
