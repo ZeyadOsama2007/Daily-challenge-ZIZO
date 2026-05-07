@@ -5,12 +5,13 @@
 
 // ---- CONSTANTS ----
 // استبدل هذه القيم ببيانات مشروعك من Supabase لاحقاً
-const SUPABASE_URL = 'https://your-project-id.supabase.co'; // الرابط الخاص بك هنا
-const SUPABASE_KEY = 'your-anon-key-here'; // المفتاح الخاص بك هنا
+const SUPABASE_URL = 'https://your-actual-id.supabase.co'; 
+const SUPABASE_KEY = 'your-actual-key'; 
 
 let supabaseClient = null;
-if (typeof supabase !== 'undefined' && !SUPABASE_URL.includes('your-project-id')) {
+if (typeof supabase !== 'undefined' && SUPABASE_URL.startsWith('https://')) {
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  console.log("Supabase connected!");
 }
 
 // ---- AUDIO FEEDBACK ----
