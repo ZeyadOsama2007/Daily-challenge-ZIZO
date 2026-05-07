@@ -68,6 +68,7 @@ function loadState() {
     dailyGoals: [],
     todayDate: null,
     profileImageUrl: null, // Added for profile image
+    groupName: null, // Added for user groups
   };
 }
 
@@ -87,6 +88,7 @@ async function syncLeaderboard() {
     level: state.level,
     last_active: new Date().toISOString(),
     profile_image_url: state.profileImageUrl, // Added profile image URL
+    group_name: state.groupName, // Added group name
   };
 
   if (supabaseClient) {
@@ -94,14 +96,20 @@ async function syncLeaderboard() {
   }
 }
 
-async function getLeaderboard() {
+let currentLeaderboardFilter = null; // To keep track of the current filter
+
+async function getLeaderboard(filterGroup = null) {
   if (!supabaseClient) return [];
   
-  const { data, error } = await supabaseClient
+  let query = supabaseClient
     .from('leaderboard')
     .select('*')
     .order('points', { ascending: false });
     
+  if (filterGroup) {
+    query = query.eq('group_name', filterGroup);
+  }
+  const { data, error } = await query;
   return data || [];
 }
 
@@ -347,6 +355,48 @@ function completeGoal(index) {
   renderDailyGoals();
   updateHomeUI();
   showCompletionModal(goal);
+}
+
+// ---- CUSTOM CHALLENGES ----
+function createCustomChallenge() {
+  playSound('click');
+  const name = prompt("اسم التحدي (مثلاً: تعلم لغة جديدة):");
+  if (!name || name.trim() === "") return;
+
+  const icon = prompt("أيقونة التحدي (مثلاً: 🌍):", "✨");
+  if (!icon || icon.trim() === "") return;
+
+  const desc = prompt("وصف التحدي (مثلاً: ادرس 30 دقيقة يومياً):");
+  if (!desc || desc.trim() === "") return;
+
+  let points = parseInt(prompt("النقاط (مثلاً: 30):", "30"));
+  if (isNaN(points) || points < 10) points = 30;
+
+  const category = prompt("الفئة (مثلاً: مذاكرة، رياضة، تطوير ذات):", "تطوير ذات");
+  if (!category || category.trim() === "") return;
+
+  const duration = prompt("المدة/الكمية (مثلاً: 30 دقيقة، 10 صفحات):", "30 دقيقة");
+  if (!duration || duration.trim() === "") return;
+
+  const id = "custom_" + Date.now();
+  const newGoal = {
+    id,
+    icon: icon.trim(),
+    name: name.trim(),
+    desc: desc.trim(),
+    points,
+    category: category.trim(),
+    duration: duration.trim(),
+    done: false,
+    isCustom: true // Mark as custom for potential future features (e.g., editing/deleting)
+  };
+
+  state.dailyGoals.push(newGoal);
+  saveState();
+  renderDailyGoals();
+  updateHomeUI();
+  alert("تم إضافة التحدي المخصص بنجاح!");
+  showPage("home"); // Go back to home page to see the new goal
 }
 
 // ---- AI COACH ----
@@ -611,10 +661,23 @@ function updateProfileUI() {
   document.getElementById("stat-total-points").textContent = state.totalPoints || 0;
   document.getElementById("stat-streak").textContent = state.streak || 0;
   document.getElementById("stat-done").textContent = state.totalDone || 0;
+
+  // Display group name
+  const groupNameEl = document.getElementById("profile-group-name");
+  if (groupNameEl) {
+    groupNameEl.textContent = state.groupName ? `مجموعتي: ${state.groupName}` : "لا توجد مجموعة";
+  }
 }
 
 // ---- PROFILE IMAGE UPLOAD ----
 async function uploadProfileImage(event) {
+  // Ensure profile image is displayed on app init if available
+  const profileImageEl = document.getElementById("profile-image");
+  if (profileImageEl) {
+    profileImageEl.src = state.profileImageUrl || 'images/default-avatar.png'; // Use a default image if none is set
+  }
+
+
   const file = event.target.files[0];
   if (!file) return;
 
@@ -668,7 +731,28 @@ function showPage(name) {
   document.querySelector(`[data-page="${name}"]`)?.classList.add("active");
 
   if (name === "friends") updateLeaderboardUI();
-  if (name === "profile") updateProfileUI();
+  if (name === "friends") {
+    // Default to showing all groups, or user's group if set
+    updateLeaderboardUI(state.groupName || null);
+    // Also update the filter UI element
+    const groupFilterSelect = document.getElementById("leaderboard-group-filter");
+    if (groupFilterSelect) {
+      // Clear existing dynamic options
+      Array.from(groupFilterSelect.options).forEach(option => {
+        if (option.value !== "all") {
+          option.remove();
+        }
+      });
+      if (state.groupName) {
+        const myGroupOption = document.createElement("option");
+        myGroupOption.value = state.groupName;
+        myGroupOption.textContent = `مجموعتي: ${state.groupName}`;
+        groupFilterSelect.appendChild(myGroupOption);
+      }
+      groupFilterSelect.value = currentLeaderboardFilter || "all";
+    }
+  }
+  if (name === "profile") { updateProfileUI(); }
   if (name === "home") { updateHomeUI(); renderDailyGoals(); }
 }
 
@@ -706,6 +790,19 @@ function changeName() {
     saveState();
     updateHomeUI();
     updateProfileUI();
+  }
+}
+
+// ---- GROUPS ----
+function changeGroup() {
+  playSound('click');
+  const newGroup = prompt("ادخل اسم مجموعتك (اتركه فارغاً للخروج من أي مجموعة):", state.groupName || "");
+  if (newGroup !== null) { // User didn't cancel
+    state.groupName = newGroup.trim() === "" ? null : newGroup.trim();
+    saveState();
+    updateProfileUI(); // Refresh profile to show new group
+    updateLeaderboardUI(); // Refresh leaderboard
+    alert(state.groupName ? `تم الانضمام إلى مجموعة: ${state.groupName}` : "تم الخروج من المجموعة.");
   }
 }
 
@@ -785,7 +882,7 @@ window.addEventListener("DOMContentLoaded", () => {
     saveState();
     hideSplash();
     // Ensure profile image is displayed on app init if available
-    const profileImageEl = document.getElementById("profile-image");
+    const profileImageEl = document.getElementById("profile-image"); // This line is redundant if updateProfileUI is called
     if (profileImageEl) {
       profileImageEl.src = state.profileImageUrl || 'images/default-avatar.png'; // Use a default image if none is set
     }

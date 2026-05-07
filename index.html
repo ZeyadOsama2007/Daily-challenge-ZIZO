@@ -212,6 +212,15 @@
       </div>
     </div>
 
+    <!-- CUSTOM CHALLENGE CREATION -->
+    <div class="section-title" style="margin-top: 20px;">➕ تحدياتك المخصصة</div>
+    <div class="custom-challenge-section">
+      <p>أنشئ تحدياتك الخاصة التي تناسب أهدافك الفريدة!</p>
+      <button class="add-challenge-btn" onclick="createCustomChallenge()">
+        ➕ أنشئ تحدياً جديداً
+      </button>
+    </div>
+
     <!-- DEFAULT CATEGORIES -->
     <div class="section-title">📂 فئات التحديات</div>
     <div class="categories-grid">
@@ -253,6 +262,14 @@
     <div class="page-header">
       <h2 class="page-title">👥 لوحة المتصدرين</h2>
       <p class="page-sub">شوف مين الأبطال اللي بيتفوقوا عليك!</p>
+    </div>
+
+    <div class="leaderboard-filters">
+      <label for="leaderboard-group-filter">عرض:</label>
+      <select id="leaderboard-group-filter" onchange="updateLeaderboardUI(this.value === 'all' ? null : this.value)">
+        <option value="all">كل المجموعات</option>
+        <!-- Option for user's current group will be added dynamically if state.groupName exists -->
+      </select>
     </div>
 
     <div class="leaderboard-card my-rank-card">
