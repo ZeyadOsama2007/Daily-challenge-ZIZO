@@ -282,7 +282,11 @@
   <!-- ===== PROFILE PAGE ===== -->
   <div id="page-profile" class="page">
     <div class="profile-header">
-      <div class="profile-avatar" id="profile-avatar">🦸</div>
+      <div class="profile-picture-container" style="position: relative; display: inline-block;">
+        <img id="profile-image" src="images/default-avatar.png" alt="صورة شخصية" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--gold);" onerror="this.src='https://ui-avatars.com/api/?name=Hero&background=f5c842&color=000'"/>
+        <input type="file" id="profile-image-upload" accept="image/*" onchange="uploadProfileImage(event)" style="display: none;" />
+        <button onclick="document.getElementById('profile-image-upload').click()" style="position: absolute; bottom: 0; right: 0; background: var(--gold); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">📷</button>
+      </div>
       <div class="profile-name" id="profile-username">البطل</div>
       <div class="profile-level-badge" id="profile-level-badge">المستوى 1 - مبتدئ ⭐</div>
     </div>
