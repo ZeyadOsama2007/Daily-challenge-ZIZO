@@ -253,10 +253,29 @@ function renderDailyGoals() {
         </div>
       </div>
       <div class="goal-points">${goal.done ? "✓" : "+" + goal.points} ⚡</div>
+      <div class="reorder-btns">
+        <button class="reorder-btn" onclick="moveGoal(event, ${i}, -1)" ${i === 0 ? 'style="opacity:0.3;pointer-events:none"' : ''}>🔼</button>
+        <button class="reorder-btn" onclick="moveGoal(event, ${i}, 1)" ${i === state.dailyGoals.length - 1 ? 'style="opacity:0.3;pointer-events:none"' : ''}>🔽</button>
+      </div>
       <button class="delete-goal-btn" onclick="deleteChallenge(event, ${i})">🗑️</button>
     `;
     container.appendChild(div);
   });
+}
+
+// ---- REORDER GOALS ----
+function moveGoal(event, index, direction) {
+  event.stopPropagation();
+  const newIndex = index + direction;
+
+  // التأكد من أن الترتيب الجديد ضمن حدود المصفوفة
+  if (newIndex < 0 || newIndex >= state.dailyGoals.length) return;
+
+  // تبديل العناصر
+  [state.dailyGoals[index], state.dailyGoals[newIndex]] = [state.dailyGoals[newIndex], state.dailyGoals[index]];
+
+  saveState();
+  renderDailyGoals();
 }
 
 function toggleGoalTimer(event, index) {

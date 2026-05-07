@@ -534,3 +534,19 @@ html, body {
 .delete-goal-btn:hover {
   transform: scale(1.2);
 }
+
+.reorder-btns {
+  display: flex;
+  flex-direction: column;
+  margin-right: 5px;
+  flex-shrink: 0;
+}
+.reorder-btn {
+  background: none;
+  border: none;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 2px;
+  transition: transform 0.1s;
+}
+.reorder-btn:hover { transform: scale(1.2); }
