@@ -67,6 +67,7 @@ function loadState() {
     totalDone: 0,
     dailyGoals: [],
     todayDate: null,
+    profileImageUrl: null, // Added for profile image
   };
 }
 
@@ -84,7 +85,8 @@ async function syncLeaderboard() {
     points: state.totalPoints,
     streak: state.streak,
     level: state.level,
-    last_active: new Date().toISOString()
+    last_active: new Date().toISOString(),
+    profile_image_url: state.profileImageUrl, // Added profile image URL
   };
 
   if (supabaseClient) {
@@ -611,6 +613,51 @@ function updateProfileUI() {
   document.getElementById("stat-done").textContent = state.totalDone || 0;
 }
 
+// ---- PROFILE IMAGE UPLOAD ----
+async function uploadProfileImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!supabaseClient) {
+    alert("Supabase client not initialized. Cannot upload image.");
+    return;
+  }
+
+  // Optional: Add a loading indicator here, e.g., document.getElementById("profile-image-loading").classList.remove("hidden");
+
+  const fileExt = file.name.split('.').pop();
+  // Use username and a timestamp to ensure unique file names in storage
+  const fileName = `${state.username}_${Date.now()}.${fileExt}`;
+  const filePath = `avatars/${fileName}`; // Supabase Storage path (e.g., 'avatars' is your bucket name)
+
+  try {
+    // Upload file to Supabase Storage
+    const { data, error } = await supabaseClient.storage
+      .from('avatars') // Assuming you have a bucket named 'avatars' in Supabase Storage
+      .upload(filePath, file, {
+        cacheControl: '3600', // Cache for 1 hour
+        upsert: true // Overwrite if a file with the same path exists
+      });
+
+    if (error) throw error;
+
+    // Get the public URL of the uploaded file
+    const { data: publicUrlData } = supabaseClient.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    state.profileImageUrl = publicUrlData.publicUrl;
+    saveState(); // This will also call syncLeaderboard() to update the DB
+    updateProfileUI(); // Refresh the profile UI to show the new image
+    alert("تم تحديث الصورة الشخصية بنجاح!");
+  } catch (error) {
+    console.error("Error uploading profile image:", error.message);
+    alert("فشل رفع الصورة: " + error.message);
+  } finally {
+    // Optional: Hide loading indicator, e.g., document.getElementById("profile-image-loading").classList.add("hidden");
+  }
+}
+
 // ---- NAVIGATION ----
 function showPage(name) {
   playSound('click');
@@ -737,6 +784,11 @@ window.addEventListener("DOMContentLoaded", () => {
     initDailyGoals();
     saveState();
     hideSplash();
+    // Ensure profile image is displayed on app init if available
+    const profileImageEl = document.getElementById("profile-image");
+    if (profileImageEl) {
+      profileImageEl.src = state.profileImageUrl || 'images/default-avatar.png'; // Use a default image if none is set
+    }
     initApp();
   } else {
     // Show splash
