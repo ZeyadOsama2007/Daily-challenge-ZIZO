@@ -525,7 +525,7 @@ html, body {
   font-size: 1.1rem;
   cursor: pointer;
   padding: 5px;
-  margin: 0 5px;
+  margin-right: 8px;
   transition: transform 0.2s;
   display: flex;
   align-items: center;
