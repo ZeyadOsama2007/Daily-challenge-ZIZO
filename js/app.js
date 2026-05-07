@@ -9,7 +9,7 @@ const SUPABASE_URL = 'https://your-project-id.supabase.co'; // الرابط ال
 const SUPABASE_KEY = 'your-anon-key-here'; // المفتاح الخاص بك هنا
 
 let supabaseClient = null;
-if (typeof supabase !== 'undefined' && SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+if (typeof supabase !== 'undefined' && !SUPABASE_URL.includes('your-project-id')) {
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
@@ -714,7 +714,7 @@ async function uploadProfileImage(event) {
     updateProfileUI(); // Refresh the profile UI to show the new image
     alert("تم تحديث الصورة الشخصية بنجاح!");
   } catch (error) {
-    console.error("Error uploading profile image:", error.message);
+    console.error("Error uploading profile image:", error);
     alert("فشل رفع الصورة: " + error.message);
   } finally {
     // Optional: Hide loading indicator, e.g., document.getElementById("profile-image-loading").classList.add("hidden");
