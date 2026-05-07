@@ -5,8 +5,8 @@
 
 // ---- CONSTANTS ----
 // استبدل هذه القيم ببيانات مشروعك من Supabase لاحقاً
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://your-project-id.supabase.co'; // الرابط الخاص بك هنا
+const SUPABASE_KEY = 'your-anon-key-here'; // المفتاح الخاص بك هنا
 
 let supabaseClient = null;
 if (typeof supabase !== 'undefined' && SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
