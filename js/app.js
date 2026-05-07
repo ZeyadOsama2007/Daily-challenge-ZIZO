@@ -259,19 +259,29 @@ function renderDailyGoals() {
         <div class="goal-desc">${goal.desc}</div>
         <div class="goal-duration-tag">
           ${!goal.done ? `<div class="time-control-btn" onclick="adjustTime(event, ${i}, -5)">-</div>` : ''}
+          ${!goal.done ? `<div class="time-control-btn" onclick="adjustTime(event, ${i}, 5)">+</div>` : ''}
+          <span onclick="deleteGoal(event, ${i})" style="cursor:pointer; margin: 0 10px; opacity:0.6" title="حذف">🗑️</span>
           <span onclick="toggleGoalTimer(event, ${i})" style="cursor:pointer">
             ${isRunning ? '⏹' : '⏱'} 
             <span id="timer-display-${i}">${timeDisplay}</span>
           </span>
-          ${!goal.done ? `<div class="time-control-btn" onclick="adjustTime(event, ${i}, 5)">+</div>` : ''}
           <span onclick="changeGoalDuration(event, ${i})" style="cursor:pointer; margin-right:5px">✏️</span>
-          <span onclick="deleteGoal(event, ${i})" style="cursor:pointer; margin-right:5px; opacity:0.5" title="حذف">🗑️</span>
         </div>
       </div>
       <div class="goal-points">${goal.done ? "✓" : "+" + goal.points} ⚡</div>
     `;
     container.appendChild(div);
   });
+
+  // إضافة زر "إضافة تحدي جديد" في نهاية القائمة
+  const addBtn = document.createElement("div");
+  addBtn.className = "goal-item";
+  addBtn.style.border = "2px dashed #3498db";
+  addBtn.style.justifyContent = "center";
+  addBtn.style.cursor = "pointer";
+  addBtn.onclick = () => createCustomChallenge();
+  addBtn.innerHTML = `<div class="goal-name">➕ إضافة تحدي جديد مخصص</div>`;
+  container.appendChild(addBtn);
 }
 
 function resumeTimers() {
