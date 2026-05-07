@@ -52,7 +52,7 @@ function playSound(name) {
 
 // ---- STATE ----
 let state = loadState();
-let activeTimers = {}; // لتتبع العدادات الجارية
+let timerIntervals = {}; // لتتبع العدادات النشطة برمجياً (الإنترفال)
 
 function loadState() {
   try {
@@ -70,6 +70,7 @@ function loadState() {
     todayDate: null,
     profileImageUrl: null, // Added for profile image
     groupName: null, // Added for user groups
+    activeTimers: {}, // تخزين أوقات نهاية العدادات للحفاظ عليها عند التحديث
   };
 }
 
@@ -183,6 +184,7 @@ function initApp() {
   updateLeaderboardUI();
   startCountdown();
   updateProfileUI();
+  resumeTimers(); // استئناف العدادات المحفوظة عند فتح التطبيق
 }
 
 // ---- HOME UI ----
@@ -235,6 +237,18 @@ function renderDailyGoals() {
   container.innerHTML = "";
 
   state.dailyGoals.forEach((goal, i) => {
+    const isRunning = state.activeTimers && state.activeTimers[i];
+    let timeDisplay = goal.duration || 'إضافة وقت';
+
+    // إذا كان العداد يعمل، نحسب الوقت المتبقي فوراً للعرض
+    if (isRunning) {
+      const remaining = Math.max(0, Math.floor((state.activeTimers[i] - Date.now()) / 1000));
+      const h = Math.floor(remaining / 3600);
+      const m = Math.floor((remaining % 3600) / 60);
+      const s = remaining % 60;
+      timeDisplay = h > 0 ? `${h}:${m}:${s.toString().padStart(2, '0')}` : `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
     const div = document.createElement("div");
     div.className = "goal-item" + (goal.done ? " completed" : "");
     div.onclick = () => completeGoal(i);
@@ -246,11 +260,12 @@ function renderDailyGoals() {
         <div class="goal-duration-tag">
           ${!goal.done ? `<div class="time-control-btn" onclick="adjustTime(event, ${i}, -5)">-</div>` : ''}
           <span onclick="toggleGoalTimer(event, ${i})" style="cursor:pointer">
-            ${activeTimers[i] ? '⏹' : '⏱'} 
-            <span id="timer-display-${i}">${goal.duration || 'إضافة وقت'}</span>
+            ${isRunning ? '⏹' : '⏱'} 
+            <span id="timer-display-${i}">${timeDisplay}</span>
           </span>
           ${!goal.done ? `<div class="time-control-btn" onclick="adjustTime(event, ${i}, 5)">+</div>` : ''}
           <span onclick="changeGoalDuration(event, ${i})" style="cursor:pointer; margin-right:5px">✏️</span>
+          <span onclick="deleteGoal(event, ${i})" style="cursor:pointer; margin-right:5px; opacity:0.5" title="حذف">🗑️</span>
         </div>
       </div>
       <div class="goal-points">${goal.done ? "✓" : "+" + goal.points} ⚡</div>
@@ -259,43 +274,69 @@ function renderDailyGoals() {
   });
 }
 
+function resumeTimers() {
+  const now = Date.now();
+  if (!state.activeTimers) return;
+  for (const index in state.activeTimers) {
+    const endTime = state.activeTimers[index];
+    if (endTime > now) {
+      startInterval(index);
+    } else {
+      delete state.activeTimers[index];
+      saveState();
+    }
+  }
+}
+
 function toggleGoalTimer(event, index) {
   event.stopPropagation();
   const goal = state.dailyGoals[index];
   if (goal.done) return;
 
-  if (activeTimers[index]) {
-    clearInterval(activeTimers[index]);
-    delete activeTimers[index];
+  if (state.activeTimers && state.activeTimers[index]) {
+    clearInterval(timerIntervals[index]);
+    delete state.activeTimers[index];
+    delete timerIntervals[index];
+    saveState();
     renderDailyGoals();
     return;
   }
 
   const match = goal.duration.match(/\d+/);
-  if (!match) {
-    changeGoalDuration(event, index);
-    return;
-  }
+  if (!match) { changeGoalDuration(event, index); return; }
 
   let seconds = parseInt(match[0]) * 60;
   if (goal.duration.includes("ساعة")) seconds = parseInt(match[0]) * 3600;
 
-  activeTimers[index] = setInterval(() => {
-    seconds--;
-    if (seconds <= 0) {
-      clearInterval(activeTimers[index]);
-      delete activeTimers[index];
+  if (!state.activeTimers) state.activeTimers = {};
+  state.activeTimers[index] = Date.now() + (seconds * 1000);
+  saveState();
+  startInterval(index);
+  renderDailyGoals();
+}
+
+function startInterval(index) {
+  if (timerIntervals[index]) clearInterval(timerIntervals[index]);
+  
+  timerIntervals[index] = setInterval(() => {
+    const endTime = state.activeTimers[index];
+    const remaining = endTime ? Math.max(0, Math.floor((endTime - Date.now()) / 1000)) : 0;
+
+    if (remaining <= 0) {
+      clearInterval(timerIntervals[index]);
+      delete state.activeTimers[index];
+      delete timerIntervals[index];
+      saveState();
       playSound('timerEnd');
       completeGoal(index);
     } else {
-      const m = Math.floor(seconds / 60);
-      const s = seconds % 60;
+      const h = Math.floor(remaining / 3600);
+      const m = Math.floor((remaining % 3600) / 60);
+      const s = remaining % 60;
       const display = document.getElementById(`timer-display-${index}`);
-      if (display) display.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+      if (display) display.textContent = h > 0 ? `${h}:${m}:${s.toString().padStart(2, '0')}` : `${m}:${s.toString().padStart(2, '0')}`;
     }
   }, 1000);
-
-  renderDailyGoals();
 }
 
 function adjustTime(event, index, delta) {
@@ -303,10 +344,10 @@ function adjustTime(event, index, delta) {
   const goal = state.dailyGoals[index];
   if (goal.done) return;
 
-  // إيقاف العداد إذا كان يعمل لتجنب التداخل
-  if (activeTimers[index]) {
-    clearInterval(activeTimers[index]);
-    delete activeTimers[index];
+  if (state.activeTimers && state.activeTimers[index]) {
+    clearInterval(timerIntervals[index]);
+    delete state.activeTimers[index];
+    delete timerIntervals[index];
   }
 
   const match = goal.duration.match(/\d+/);
@@ -339,6 +380,40 @@ function changeGoalDuration(event, index) {
     saveState();
     renderDailyGoals();
   }
+}
+
+function deleteGoal(event, index) {
+  if (event) event.stopPropagation();
+  if (confirm("هل تريد حذف هذا التحدي نهائياً؟")) {
+    if (state.activeTimers && state.activeTimers[index]) {
+      clearInterval(timerIntervals[index]);
+      delete state.activeTimers[index];
+    }
+    state.dailyGoals.splice(index, 1);
+    saveState();
+    renderDailyGoals();
+    updateHomeUI();
+  }
+}
+
+function editGoal(event, index) {
+  if (event) event.stopPropagation();
+  const goal = state.dailyGoals[index];
+  const newName = prompt("تعديل اسم التحدي:", goal.name);
+  if (!newName || newName.trim() === "") return;
+  
+  const newPoints = parseInt(prompt("تعديل النقاط:", goal.points));
+  if (isNaN(newPoints)) return;
+
+  state.dailyGoals[index] = {
+    ...goal,
+    name: newName.trim(),
+    points: newPoints
+  };
+  
+  saveState();
+  renderDailyGoals();
+  updateHomeUI();
 }
 
 function completeGoal(index) {
@@ -675,6 +750,39 @@ function updateProfileUI() {
   if (groupNameEl) {
     groupNameEl.textContent = state.groupName ? `مجموعتي: ${state.groupName}` : "لا توجد مجموعة";
   }
+
+  // تحديث قسم إدارة التحديات في الملف الشخصي
+  renderManageChallenges();
+}
+
+function renderManageChallenges() {
+  const profilePage = document.getElementById("page-profile");
+  if (!profilePage) return;
+
+  let container = document.getElementById("manage-challenges-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "manage-challenges-container";
+    container.style.marginTop = "30px";
+    profilePage.appendChild(container);
+  }
+
+  container.innerHTML = '<div class="section-title">إدارة التحديات ⚙️</div>';
+  state.dailyGoals.forEach((goal, i) => {
+    const div = document.createElement("div");
+    div.className = "setting-item";
+    div.innerHTML = `
+      <div style="flex:1">
+        <strong>${goal.icon} ${goal.name}</strong>
+        <div style="font-size:0.75rem; color:var(--text-muted)">${goal.points}⚡ - ${goal.duration}</div>
+      </div>
+      <div style="display:flex; gap:8px">
+        <button onclick="editGoal(event, ${i})" class="setting-action-btn" style="background:var(--secondary); color:white; padding: 5px 10px;">✏️</button>
+        <button onclick="deleteGoal(event, ${i})" class="setting-action-btn danger" style="padding: 5px 10px;">🗑️</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
 }
 
 // ---- PROFILE IMAGE UPLOAD ----
