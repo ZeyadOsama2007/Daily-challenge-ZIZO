@@ -142,9 +142,10 @@ function initDailyGoals() {
   if (state.todayDate !== today) {
     // New day! Reset daily goals but keep progress
     updateStreak(today);
-    state.dailyGoals = DEFAULT_GOALS.map(g => ({ ...g, done: false }));
+    // الاحتفاظ بالتحديات المخصصة وإعادة ضبط حالتها، مع إضافة التحديات الافتراضية
+    const customs = (state.dailyGoals || []).filter(g => g.isCustom).map(g => ({ ...g, done: false }));
+    state.dailyGoals = [...DEFAULT_GOALS.map(g => ({ ...g, done: false })), ...customs];
     state.todayDate = today;
-    state.todayPoints = 0;
   }
   if (!state.dailyGoals || state.dailyGoals.length === 0) {
     state.dailyGoals = DEFAULT_GOALS.map(g => ({ ...g, done: false }));
@@ -662,6 +663,12 @@ function updateProfileUI() {
   document.getElementById("stat-streak").textContent = state.streak || 0;
   document.getElementById("stat-done").textContent = state.totalDone || 0;
 
+  // تحديث الصورة الشخصية في الواجهة
+  const profileImageEl = document.getElementById("profile-image");
+  if (profileImageEl) {
+    profileImageEl.src = state.profileImageUrl || 'images/default-avatar.png';
+  }
+
   // Display group name
   const groupNameEl = document.getElementById("profile-group-name");
   if (groupNameEl) {
@@ -671,13 +678,6 @@ function updateProfileUI() {
 
 // ---- PROFILE IMAGE UPLOAD ----
 async function uploadProfileImage(event) {
-  // Ensure profile image is displayed on app init if available
-  const profileImageEl = document.getElementById("profile-image");
-  if (profileImageEl) {
-    profileImageEl.src = state.profileImageUrl || 'images/default-avatar.png'; // Use a default image if none is set
-  }
-
-
   const file = event.target.files[0];
   if (!file) return;
 
@@ -881,11 +881,6 @@ window.addEventListener("DOMContentLoaded", () => {
     initDailyGoals();
     saveState();
     hideSplash();
-    // Ensure profile image is displayed on app init if available
-    const profileImageEl = document.getElementById("profile-image"); // This line is redundant if updateProfileUI is called
-    if (profileImageEl) {
-      profileImageEl.src = state.profileImageUrl || 'images/default-avatar.png'; // Use a default image if none is set
-    }
     initApp();
   } else {
     // Show splash
