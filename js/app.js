@@ -253,10 +253,8 @@ function renderDailyGoals() {
         </div>
       </div>
       <div class="goal-points">${goal.done ? "✓" : "+" + goal.points} ⚡</div>
+      <button class="delete-goal-btn" onclick="deleteChallenge(event, ${i})">🗑️</button>
     `;
-    if (goal.isCustom) {
-      div.innerHTML += `<button class="delete-custom-goal-btn" onclick="deleteCustomChallenge(event, ${i})">🗑️</button>`;
-    }
     container.appendChild(div);
   });
 }
@@ -403,12 +401,12 @@ function createCustomChallenge() {
   showPage("home"); // Go back to home page to see the new goal
 }
 
-// ---- DELETE CUSTOM CHALLENGES ----
-function deleteCustomChallenge(event, index) {
+// ---- DELETE CHALLENGES ----
+function deleteChallenge(event, index) {
   event.stopPropagation(); // منع إتمام التحدي عند النقر على زر الحذف
 
   const goalToDelete = state.dailyGoals[index];
-  if (confirm(`هل أنت متأكد أنك تريد حذف التحدي "${goalToDelete.name}"؟`)) {
+  if (confirm(`هل أنت متأكد أنك تريد إزالة التحدي "${goalToDelete.name}" من قائمتك؟`)) {
     state.dailyGoals.splice(index, 1); // إزالة التحدي من المصفوفة
     saveState();
     renderDailyGoals();

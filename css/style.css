@@ -517,3 +517,19 @@ html, body {
   50%  { transform: scale(1.08); }
   100% { transform: scale(1); }
 }
+
+.delete-goal-btn {
+  background: none;
+  border: none;
+  color: var(--accent-red);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 5px;
+  margin-right: 10px;
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+}
+.delete-goal-btn:hover {
+  transform: scale(1.2);
+}
